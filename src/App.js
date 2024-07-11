@@ -119,7 +119,7 @@ export default function FixedTags() {
 
     setResult(
       mostProbableDisease.disease ||
-      "No matching disease found. Please select other symptoms."
+      "No matching disease found."
     );
   };
 
