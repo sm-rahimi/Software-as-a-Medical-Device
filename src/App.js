@@ -46,17 +46,15 @@ const diseases = [
   },
   {
     disease: "common cold",
-    symptoms: [
-      0.5, 0.75, 0.75, 0.75, 0.75, 0, 0.5, 0, 0, 0, 0, 0, 0.75, 0.25, 0.25, 0,
-    ],
+    symptoms: [0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   },
   {
     disease: "bronchitis",
-    symptoms: [0.5, 0.75, 0, 0.75, 0, 0, 0, 0, 0, 0, 0, 0.5, 0, 0, 0, 0],
+    symptoms: [0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
   },
   {
     disease: "RSV",
-    symptoms: [0.5, 0.75, 0, 0.75, 0.75, 0, 0, 0, 0, 0, 0, 0, 0.5, 0, 0, 0],
+    symptoms: [0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
   },
 ];
 
@@ -68,9 +66,18 @@ export default function FixedTags() {
   const fixedOptions = [];
   const [value, setValue] = React.useState([...fixedOptions]);
   const [result, setResult] = React.useState(null);
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
 
-  function handleClick() {
+  React.useEffect(() => {
+    setOpen(true);
+  }, []);
+
+  const handleClick = () => {
+    if (value.length === 0) {
+      alert("Please select at least one symptom.");
+      return;
+    }
+
     const userSymptoms = value.reduce((acc, curr) => {
       acc[curr.title] = true;
       return acc;
@@ -81,10 +88,19 @@ export default function FixedTags() {
       index,
     })).filter((item) => userSymptoms[item.symptom.title]);
 
+    console.log("Selected Symptom Indices:", symptomIndices);
+
     const diseaseProbabilities = diseases.map((diseaseObj) => {
       let probability = 1;
       symptomIndices.forEach(({ index }) => {
-        probability *= calculateSymptomProbability(diseaseObj.disease, index);
+        const symptomProbability = calculateSymptomProbability(
+          diseaseObj.disease,
+          index
+        );
+        console.log(
+          `Calculating for ${diseaseObj.disease}: symptom index ${index}, probability ${symptomProbability}`
+        );
+        probability *= symptomProbability;
       });
       return {
         disease: diseaseObj.disease,
@@ -92,13 +108,20 @@ export default function FixedTags() {
       };
     });
 
+    console.log("Disease Probabilities:", diseaseProbabilities);
+
     const mostProbableDisease = diseaseProbabilities.reduce(
       (max, dp) => (dp.probability > max.probability ? dp : max),
-      diseaseProbabilities[0]
+      { disease: "", probability: 0 }
     );
 
-    setResult(mostProbableDisease.disease);
-  }
+    console.log("Most Probable Disease:", mostProbableDisease);
+
+    setResult(
+      mostProbableDisease.disease ||
+      "No matching disease found. Please select other symptoms."
+    );
+  };
 
   const handleClose = () => {
     setOpen(false);
